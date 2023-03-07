@@ -1,11 +1,13 @@
-import { SocketProvider } from './context/SocketProvider'
-import { Home } from './pages/home'
+import { UserProvider, SocketProvider } from '@/context'
+import { AppRoutes } from '@/routes'
 
 function App() {
   return (
-    <SocketProvider>
-      <Home />
-    </SocketProvider>
+    <UserProvider>
+      <SocketProvider>
+        <AppRoutes />
+      </SocketProvider>
+    </UserProvider>
   )
 }
 

@@ -10,6 +10,9 @@ import io, { Socket } from 'socket.io-client';
 
 interface SocketContextData {
   socket: Socket | null;
+  connectSocket: () => void;
+  disconnectSocket:() => void;
+  isConnected: boolean;
 }
 
 interface SocketProviderProps {
@@ -18,16 +21,31 @@ interface SocketProviderProps {
 
 export const SocketContext = createContext<SocketContextData>({
   socket: null,
+  connectSocket: () => {},
+  disconnectSocket: () => {},
+  isConnected: false,
 });
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+
+  const connectSocket = () => {
+    socket?.connect();
+    setIsConnected(true);
+  };
+
+  const disconnectSocket = () => {
+    socket?.disconnect();
+    setIsConnected(false);
+  };
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001');
 
     if (newSocket) {
       setSocket(newSocket);
+      setIsConnected(true);
 
       newSocket.on('connected', (response) => {
         console.log(response);
@@ -36,18 +54,15 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     return () => {
       newSocket.disconnect();
+      setIsConnected(false);
     };
   }, []);
 
   return (
-    <SocketContext.Provider value={{ socket }}>
+    <SocketContext.Provider value={{ socket, connectSocket, disconnectSocket, isConnected }}>
       {children}
     </SocketContext.Provider>
   );
 };
 
-export const useSocket = () => {
-  const { socket } = useContext(SocketContext);
-
-  return socket;
-}
+export const useSocket = () => useContext(SocketContext);
